@@ -1,7 +1,7 @@
 package main
 
 import (
-	"net/http"
+	"echo-demo/users"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -13,8 +13,13 @@ func main() {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
-	e.GET("/", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Hello, world!")
-	})
+	gv := e.Group("/v1")
+	gu := gv.Group("/users")
+	gu.GET("", users.GetAll)
+	gu.GET("/:id", users.GetOne)
+	gu.POST("", users.Create)
+	gu.PUT("/:id", users.Update)
+	gu.DELETE("/:id", users.Delete)
+
 	e.Logger.Fatal(e.Start(":8080"))
 }
