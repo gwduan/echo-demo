@@ -1,6 +1,7 @@
 package main
 
 import (
+	"echo-demo/db"
 	"echo-demo/users"
 
 	"github.com/labstack/echo/v4"
@@ -9,6 +10,10 @@ import (
 
 func main() {
 	e := echo.New()
+
+	if err := db.ConnInit(); err != nil {
+		e.Logger.Fatal("Database: ", err)
+	}
 
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
