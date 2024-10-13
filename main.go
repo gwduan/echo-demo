@@ -10,6 +10,7 @@ import (
 
 func main() {
 	e := echo.New()
+	e.Debug = true
 
 	if err := db.ConnInit(); err != nil {
 		e.Logger.Fatal("Database: ", err)
