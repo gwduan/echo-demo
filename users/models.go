@@ -16,9 +16,9 @@ type User struct {
 }
 
 type UserInput struct {
-	Name     string
-	Password string
-	Age      int64
+	Name     string `json:"name" form:"name" xml:"name"`
+	Password string `json:"password" form:"password" xml:"password"`
+	Age      int64  `json:"age" form:"age" xml:"age"`
 }
 
 type UserOutput struct {
@@ -28,20 +28,62 @@ type UserOutput struct {
 	RegDate time.Time `json:"reg_date"`
 }
 
+func newOneOut(name string, password string, age int64, regDate time.Time) (uOut *UserOutput, err error) {
+	u, err := newOne(name, password, age, regDate)
+	if err != nil {
+		return nil, err
+	}
+
+	return toOut(u), nil
+}
+
+func toOut(u *User) *UserOutput {
+	return &UserOutput{
+		ID:      u.ID,
+		Name:    u.Name,
+		Age:     u.Age,
+		RegDate: u.RegDate,
+	}
+}
+
+func newOne(name string, password string, age int64, regDate time.Time) (u *User, err error) {
+	tmpAge := sql.NullInt64{}
+	if age > 0 {
+		tmpAge.Valid = true
+		tmpAge.Int64 = age
+	}
+
+	conn := db.Conn()
+	st, err := conn.Prepare("INSERT	INTO users(name, password, age, reg_date) VALUES(?, ?, ?, ?)")
+	if err != nil {
+		return nil, err
+	}
+	defer st.Close()
+
+	result, err := st.Exec(name, password, tmpAge, regDate)
+	if err != nil {
+		return nil, err
+	}
+
+	u = new(User)
+	u.ID, _ = result.LastInsertId()
+	u.Name = name
+	u.Password = password
+	if age > 0 {
+		u.Age = age
+	}
+	u.RegDate = regDate
+
+	return u, nil
+}
+
 func getOneOutByID(id int64) (uOut *UserOutput, err error) {
 	u, err := getOneByID(id)
 	if err != nil {
 		return nil, err
 	}
 
-	uOut = &UserOutput{
-		ID:      u.ID,
-		Name:    u.Name,
-		Age:     u.Age,
-		RegDate: u.RegDate,
-	}
-
-	return uOut, nil
+	return toOut(u), nil
 }
 
 func getOneByID(id int64) (u *User, err error) {
