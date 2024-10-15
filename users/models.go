@@ -16,8 +16,8 @@ type User struct {
 }
 
 type UserInput struct {
-	Name     string `json:"name" form:"name" xml:"name"`
-	Password string `json:"password" form:"password" xml:"password"`
+	Name     string `json:"name" form:"name" xml:"name" validate:"required"`
+	Password string `json:"password" form:"password" xml:"password" validate:"required"`
 	Age      int64  `json:"age" form:"age" xml:"age"`
 }
 

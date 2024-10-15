@@ -6,11 +6,13 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-var dbPool *sql.DB
-var url = "root:root@/echo_demo?charset=utf8&parseTime=True&loc=Local"
+var (
+	dbPool *sql.DB
+	dbUrl  = "root:root@/echo_demo?charset=utf8&parseTime=True&loc=Local"
+)
 
 func ConnInit() error {
-	db, err := sql.Open("mysql", url)
+	db, err := sql.Open("mysql", dbUrl)
 	if err != nil {
 		return err
 	}

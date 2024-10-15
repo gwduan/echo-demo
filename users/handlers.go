@@ -17,13 +17,10 @@ func Create(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest,
 			"Please provide valid data")
 	}
-	if len(uIn.Name) == 0 {
+	if err := c.Validate(uIn); err != nil {
+		c.Echo().Logger.Debug(err)
 		return echo.NewHTTPError(http.StatusBadRequest,
-			"User(name) Empty")
-	}
-	if len(uIn.Password) == 0 {
-		return echo.NewHTTPError(http.StatusBadRequest,
-			"User(password) Empty")
+			"Validation error, please verify your data")
 	}
 
 	uOut, err := newOneOut(uIn.Name, uIn.Password, uIn.Age, time.Now())
