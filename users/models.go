@@ -55,7 +55,7 @@ func newOne(name string, password string, age int64, regDate time.Time) (u *User
 	}
 
 	conn := db.Conn()
-	st, err := conn.Prepare("INSERT	INTO users(name, password, age, reg_date) VALUES(?, ?, ?, ?)")
+	st, err := conn.Prepare("INSERT INTO users(name, password, age, reg_date) VALUES(?, ?, ?, ?)")
 	if err != nil {
 		return nil, err
 	}
@@ -162,4 +162,46 @@ func getAll(limit int64, offset int64) (us []*User, err error) {
 	}
 
 	return us, nil
+}
+
+func updateOneOut(id int64, name string, password string, age int64) (uOut *UserOutput, err error) {
+	u, err := updateOne(id, name, password, age)
+	if err != nil {
+		return nil, err
+	}
+
+	return toOut(u), nil
+}
+
+func updateOne(id int64, name string, password string, age int64) (u *User, err error) {
+	conn := db.Conn()
+	st, err := conn.Prepare("UPDATE users SET name = ?, password = ?, age = ? WHERE id = ?")
+	if err != nil {
+		return nil, err
+	}
+	defer st.Close()
+
+	tmpAge := sql.NullInt64{}
+	if age > 0 {
+		tmpAge.Valid = true
+		tmpAge.Int64 = age
+	}
+	//result, err := st.Exec(name, password, tmpAge, id)
+	_, err = st.Exec(name, password, tmpAge, id)
+	if err != nil {
+		return nil, err
+	}
+	//num == 0 means id not found or data unchanged.
+	/*
+		if num, _ := result.RowsAffected(); num == 0 {
+			return nil, sql.ErrNoRows
+		}
+	*/
+
+	u, err = getOneByID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	return u, nil
 }
