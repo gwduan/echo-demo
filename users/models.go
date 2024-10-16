@@ -2,6 +2,7 @@ package users
 
 import (
 	"database/sql"
+	"fmt"
 	"time"
 
 	"echo-demo/db"
@@ -107,4 +108,58 @@ func getOneByID(id int64) (u *User, err error) {
 	}
 
 	return u, nil
+}
+
+func getAllOut(limit int64, offset int64) (uOuts []*UserOutput, err error) {
+	us, err := getAll(limit, offset)
+	if err != nil {
+		return nil, err
+	}
+
+	uOuts = make([]*UserOutput, 0, limit)
+	for _, u := range us {
+		uOuts = append(uOuts, toOut(u))
+	}
+
+	return uOuts, nil
+}
+
+func getAll(limit int64, offset int64) (us []*User, err error) {
+	sqlStr := "SELECT id, name, password, age, reg_date FROM users"
+	sqlStr += " LIMIT " + fmt.Sprintf("%d", limit)
+	if offset > 0 {
+		sqlStr += " OFFSET " + fmt.Sprintf("%d", offset)
+	}
+
+	conn := db.Conn()
+	st, err := conn.Prepare(sqlStr)
+	if err != nil {
+		return nil, err
+	}
+	defer st.Close()
+
+	rows, err := st.Query()
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	us = make([]*User, 0, limit)
+	for rows.Next() {
+		u := new(User)
+		var tmpAge sql.NullInt64
+		if err := rows.Scan(&u.ID, &u.Name, &u.Password, &tmpAge,
+			&u.RegDate); err != nil {
+			return nil, err
+		}
+		if tmpAge.Valid {
+			u.Age = tmpAge.Int64
+		}
+		us = append(us, u)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return us, nil
 }

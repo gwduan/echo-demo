@@ -10,6 +10,11 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+const (
+	DEFAULT_LIMIT  = 5
+	DEFAULT_OFFSET = 0
+)
+
 func Create(c echo.Context) error {
 	uIn := new(UserInput)
 	if err := c.Bind(uIn); err != nil {
@@ -61,7 +66,22 @@ func GetOne(c echo.Context) error {
 }
 
 func GetAll(c echo.Context) error {
-	return c.String(http.StatusOK, "GetAllUsers")
+	limit, err := strconv.Atoi(c.QueryParam("limit"))
+	if err != nil || limit <= 0 {
+		limit = DEFAULT_LIMIT
+	}
+	offset, err := strconv.Atoi(c.QueryParam("offset"))
+	if err != nil || offset < 0 {
+		offset = DEFAULT_OFFSET
+	}
+
+	uOuts, err := getAllOut(int64(limit), int64(offset))
+	if err != nil {
+		c.Echo().Logger.Debug(err)
+		return err
+	}
+
+	return c.JSON(http.StatusOK, uOuts)
 }
 
 func Update(c echo.Context) error {
