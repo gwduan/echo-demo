@@ -205,3 +205,22 @@ func updateOne(id int64, name string, password string, age int64) (u *User, err 
 
 	return u, nil
 }
+
+func deleteOne(id int64) error {
+	conn := db.Conn()
+	st, err := conn.Prepare("DELETE FROM users WHERE id = ?")
+	if err != nil {
+		return err
+	}
+	defer st.Close()
+
+	result, err := st.Exec(id)
+	if err != nil {
+		return err
+	}
+	if num, _ := result.RowsAffected(); num == 0 {
+		return sql.ErrNoRows
+	}
+
+	return nil
+}

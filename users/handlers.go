@@ -125,5 +125,22 @@ func Update(c echo.Context) error {
 }
 
 func Delete(c echo.Context) error {
-	return c.String(http.StatusOK, "DeleteUser")
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.Echo().Logger.Debug(err)
+		return echo.NewHTTPError(http.StatusBadRequest,
+			"Please provide valid id (number)")
+	}
+
+	err = deleteOne(int64(id))
+	if err != nil {
+		c.Echo().Logger.Debug(err)
+		if err == sql.ErrNoRows {
+			return echo.NewHTTPError(http.StatusNotFound,
+				"User(id:"+c.Param("id")+") Not Found")
+		}
+		return err
+	}
+
+	return c.NoContent(http.StatusNoContent)
 }
