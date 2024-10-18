@@ -11,4 +11,4 @@ CREATE TABLE users (
   UNIQUE(`name`)
 );
 
-INSERT INTO users(name, password, reg_date) VALUES('admin', 'admin', now());
+INSERT INTO users(name, password, reg_date) VALUES('admin', '$argon2id$v=19$m=65536,t=1,p=12$4qYJsiDikwKPTI2p9GRxDA$os2AZJCH2X0xf6BYI0FUYOm4CZuH/kk4bew+IyM96sg', now());
