@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"echo-demo/db"
+
+	"github.com/alexedwards/argon2id"
 )
 
 type User struct {
@@ -48,6 +50,13 @@ func toOut(u *User) *UserOutput {
 }
 
 func newOne(name string, password string, age int64, regDate time.Time) (u *User, err error) {
+	// Use Argon2 algorithms to generate password hashes
+	// Thanks Alex Edwards
+	hashPass, err := argon2id.CreateHash(password, argon2id.DefaultParams)
+	if err != nil {
+		return nil, err
+	}
+
 	tmpAge := sql.NullInt64{}
 	if age > 0 {
 		tmpAge.Valid = true
@@ -61,7 +70,7 @@ func newOne(name string, password string, age int64, regDate time.Time) (u *User
 	}
 	defer st.Close()
 
-	result, err := st.Exec(name, password, tmpAge, regDate)
+	result, err := st.Exec(name, hashPass, tmpAge, regDate)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +78,7 @@ func newOne(name string, password string, age int64, regDate time.Time) (u *User
 	u = new(User)
 	u.ID, _ = result.LastInsertId()
 	u.Name = name
-	u.Password = password
+	u.Password = hashPass
 	if age > 0 {
 		u.Age = age
 	}
@@ -174,6 +183,11 @@ func updateOneOut(id int64, name string, password string, age int64) (uOut *User
 }
 
 func updateOne(id int64, name string, password string, age int64) (u *User, err error) {
+	hashPass, err := argon2id.CreateHash(password, argon2id.DefaultParams)
+	if err != nil {
+		return nil, err
+	}
+
 	conn := db.Conn()
 	st, err := conn.Prepare("UPDATE users SET name = ?, password = ?, age = ? WHERE id = ?")
 	if err != nil {
@@ -186,8 +200,8 @@ func updateOne(id int64, name string, password string, age int64) (u *User, err 
 		tmpAge.Valid = true
 		tmpAge.Int64 = age
 	}
-	//result, err := st.Exec(name, password, tmpAge, id)
-	_, err = st.Exec(name, password, tmpAge, id)
+	//result, err := st.Exec(name, hashPass, tmpAge, id)
+	_, err = st.Exec(name, hashPass, tmpAge, id)
 	if err != nil {
 		return nil, err
 	}
