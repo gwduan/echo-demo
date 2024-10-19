@@ -5,6 +5,8 @@ import (
 	"echo-demo/users"
 
 	"github.com/go-playground/validator"
+	"github.com/golang-jwt/jwt/v5"
+	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -34,7 +36,15 @@ func main() {
 	e.Use(middleware.Recover())
 
 	gv := e.Group("/v1")
+	gv.POST("/auth", users.Auth)
+
 	gu := gv.Group("/users")
+	gu.Use(echojwt.WithConfig(echojwt.Config{
+		NewClaimsFunc: func(c echo.Context) jwt.Claims {
+			return new(users.JwtCustomClaims)
+		},
+		SigningKey: users.GetVerifyKey(),
+	}))
 	gu.GET("", users.GetAll)
 	gu.GET("/:id", users.GetOne)
 	gu.POST("", users.Create)

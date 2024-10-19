@@ -24,11 +24,21 @@ type UserInput struct {
 	Age      int64  `json:"age" form:"age" xml:"age"`
 }
 
+type AuthInput struct {
+	Name     string `json:"name" form:"name" xml:"name" validate:"required"`
+	Password string `json:"password" form:"password" xml:"password" validate:"required"`
+}
+
 type UserOutput struct {
 	ID      int64     `json:"id"`
 	Name    string    `json:"name"`
 	Age     int64     `json:"age"`
 	RegDate time.Time `json:"reg_date"`
+}
+
+type AuthOutput struct {
+	User  *UserOutput `json:"user"`
+	Token string      `json:"token"`
 }
 
 func newOneOut(name string, password string, age int64, regDate time.Time) (uOut *UserOutput, err error) {
@@ -237,4 +247,45 @@ func deleteOne(id int64) error {
 	}
 
 	return nil
+}
+
+func auth(name string, password string) (uOut *UserOutput, err error) {
+	u, err := getOneByName(name)
+	if err != nil {
+		return nil, err
+	}
+
+	match, err := argon2id.ComparePasswordAndHash(password, u.Password)
+	if err != nil {
+		return nil, err
+	}
+
+	if !match {
+		return nil, sql.ErrNoRows
+	}
+
+	return toOut(u), nil
+}
+
+func getOneByName(name string) (u *User, err error) {
+	u = new(User)
+
+	conn := db.Conn()
+	st, err := conn.Prepare("SELECT id, name, password, age, reg_date FROM users WHERE name = ?")
+	if err != nil {
+		return nil, err
+	}
+	defer st.Close()
+
+	var tmpAge sql.NullInt64
+	if err := st.QueryRow(name).Scan(&u.ID, &u.Name, &u.Password, &tmpAge,
+		&u.RegDate); err != nil {
+		return nil, err
+	}
+
+	if tmpAge.Valid {
+		u.Age = tmpAge.Int64
+	}
+
+	return u, nil
 }
