@@ -1,0 +1,12 @@
+{
+  "server_addr": ":8080",
+
+  "sign_key": "secret",
+  "verify_key": "secret",
+
+  "db_name": "mysql",
+  "db_url":  "root:root@/echo_demo?charset=utf8&parseTime=True&loc=Local",
+
+  "record_limit": 10,
+  "record_offset": 0
+}

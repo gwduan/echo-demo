@@ -1,6 +1,7 @@
 package main
 
 import (
+	"echo-demo/config"
 	"echo-demo/db"
 	"echo-demo/users"
 
@@ -28,6 +29,10 @@ func main() {
 	e.Validator = &CustomValidator{validator: validator.New()}
 	e.Debug = true
 
+	if err := config.Init(); err != nil {
+		e.Logger.Fatal("Config: ", err)
+	}
+
 	if err := db.ConnInit(); err != nil {
 		e.Logger.Fatal("Database: ", err)
 	}
@@ -43,7 +48,7 @@ func main() {
 		NewClaimsFunc: func(c echo.Context) jwt.Claims {
 			return new(users.JwtCustomClaims)
 		},
-		SigningKey: users.GetVerifyKey(),
+		SigningKey: config.VerifyKey(),
 	}))
 	gu.GET("", users.GetAll)
 	gu.GET("/:id", users.GetOne)
@@ -51,5 +56,5 @@ func main() {
 	gu.PUT("/:id", users.Update)
 	gu.DELETE("/:id", users.Delete)
 
-	e.Logger.Fatal(e.Start(":8080"))
+	e.Logger.Fatal(e.Start(config.ServerAddr()))
 }

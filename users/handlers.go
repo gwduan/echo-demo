@@ -2,6 +2,7 @@ package users
 
 import (
 	"database/sql"
+	"echo-demo/config"
 	"net/http"
 	"strconv"
 	"time"
@@ -16,11 +17,6 @@ type JwtCustomClaims struct {
 	Name string `json:"name"`
 	jwt.RegisteredClaims
 }
-
-const (
-	DEFAULT_LIMIT  = 5
-	DEFAULT_OFFSET = 0
-)
 
 func Auth(c echo.Context) error {
 	aIn := new(AuthInput)
@@ -55,21 +51,12 @@ func Auth(c echo.Context) error {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	key := GetSignKey()
-	tokenStr, err := token.SignedString(key)
+	tokenStr, err := token.SignedString(config.SignKey())
 	if err != nil {
 		return err
 	}
 
 	return c.JSON(http.StatusOK, AuthOutput{uOut, tokenStr})
-}
-
-func GetSignKey() []byte {
-	return []byte("secret")
-}
-
-func GetVerifyKey() []byte {
-	return GetSignKey()
 }
 
 func Create(c echo.Context) error {
@@ -133,11 +120,11 @@ func GetOne(c echo.Context) error {
 func GetAll(c echo.Context) error {
 	limit, err := strconv.Atoi(c.QueryParam("limit"))
 	if err != nil || limit <= 0 {
-		limit = DEFAULT_LIMIT
+		limit = config.RecordLimit()
 	}
 	offset, err := strconv.Atoi(c.QueryParam("offset"))
 	if err != nil || offset < 0 {
-		offset = DEFAULT_OFFSET
+		offset = config.RecordOffset()
 	}
 
 	uOuts, err := getAllOut(int64(limit), int64(offset))

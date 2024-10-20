@@ -2,17 +2,15 @@ package db
 
 import (
 	"database/sql"
+	"echo-demo/config"
 
 	_ "github.com/go-sql-driver/mysql"
 )
 
-var (
-	dbPool *sql.DB
-	dbUrl  = "root:root@/echo_demo?charset=utf8&parseTime=True&loc=Local"
-)
+var dbPool *sql.DB
 
 func ConnInit() error {
-	db, err := sql.Open("mysql", dbUrl)
+	db, err := sql.Open(config.DbName(), config.DbUrl())
 	if err != nil {
 		return err
 	}
