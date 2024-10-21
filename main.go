@@ -1,9 +1,15 @@
 package main
 
 import (
+	"context"
 	"echo-demo/config"
 	"echo-demo/db"
 	"echo-demo/users"
+	"fmt"
+	"net/http"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/go-playground/validator"
 	"github.com/golang-jwt/jwt/v5"
@@ -56,5 +62,25 @@ func main() {
 	gu.PUT("/:id", users.Update)
 	gu.DELETE("/:id", users.Delete)
 
-	e.Logger.Fatal(e.Start(config.ServerAddr()))
+	ctx, stop := signal.NotifyContext(context.Background(),
+		syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+	defer stop()
+
+	go func() {
+		err := e.Start(config.ServerAddr())
+		if err != nil && err != http.ErrServerClosed {
+			e.Logger.Fatal("Server close: ", err)
+		}
+	}()
+
+	//wait for signals to gracefully shutdown the server.
+	<-ctx.Done()
+
+	fmt.Print("Shutting down the server...")
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := e.Shutdown(ctx); err != nil {
+		e.Logger.Fatal(err)
+	}
+	fmt.Println("done.")
 }
