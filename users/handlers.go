@@ -59,10 +59,7 @@ func Auth(c echo.Context) error {
 }
 
 func Create(c echo.Context) error {
-	token := c.Get("user").(*jwt.Token)
-	claims := token.Claims.(*JwtCustomClaims)
-	authID := claims.ID
-	if authID != 1 {
+	if authID := claims(c).ID; authID != 1 {
 		return echo.NewHTTPError(http.StatusUnauthorized,
 			"Only administrator can process")
 	}
@@ -140,10 +137,7 @@ func Update(c echo.Context) error {
 			"Please provide valid id (number)")
 	}
 
-	token := c.Get("user").(*jwt.Token)
-	claims := token.Claims.(*JwtCustomClaims)
-	authID := claims.ID
-	if authID != 1 && authID != int64(id) {
+	if authID := claims(c).ID; authID != 1 && authID != int64(id) {
 		return echo.NewHTTPError(http.StatusUnauthorized,
 			"Only administrator or user(id:"+c.Param("id")+
 				") can process")
@@ -178,10 +172,7 @@ func Update(c echo.Context) error {
 }
 
 func Delete(c echo.Context) error {
-	token := c.Get("user").(*jwt.Token)
-	claims := token.Claims.(*JwtCustomClaims)
-	authID := claims.ID
-	if authID != 1 {
+	if authID := claims(c).ID; authID != 1 {
 		return echo.NewHTTPError(http.StatusUnauthorized,
 			"Only administrator can process")
 	}
@@ -204,4 +195,9 @@ func Delete(c echo.Context) error {
 	}
 
 	return c.NoContent(http.StatusNoContent)
+}
+
+func claims(c echo.Context) *JwtCustomClaims {
+	token := c.Get("user").(*jwt.Token)
+	return token.Claims.(*JwtCustomClaims)
 }
