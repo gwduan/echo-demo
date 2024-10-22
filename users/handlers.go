@@ -1,13 +1,12 @@
 package users
 
 import (
-	"database/sql"
 	"echo-demo/config"
+	"echo-demo/db"
 	"net/http"
 	"strconv"
 	"time"
 
-	"github.com/go-sql-driver/mysql"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 )
@@ -34,7 +33,7 @@ func Auth(c echo.Context) error {
 	uOut, err := auth(aIn.Name, aIn.Password)
 	if err != nil {
 		c.Echo().Logger.Debug(err)
-		if err == sql.ErrNoRows {
+		if err == db.ErrNotFound {
 			return echo.NewHTTPError(http.StatusUnauthorized,
 				"User(name or password) Incorrect")
 		}
@@ -83,12 +82,9 @@ func Create(c echo.Context) error {
 	uOut, err := newOneOut(uIn.Name, uIn.Password, uIn.Age, time.Now())
 	if err != nil {
 		c.Echo().Logger.Debug(err)
-		if e, ok := err.(*mysql.MySQLError); ok {
-			//Duplicate
-			if e.Number == 1062 {
-				return echo.NewHTTPError(http.StatusBadRequest,
-					"User(name:"+uIn.Name+") Duplicate")
-			}
+		if err == db.ErrDupRows {
+			return echo.NewHTTPError(http.StatusBadRequest,
+				"User(name:"+uIn.Name+") Duplicate")
 		}
 		return err
 	}
@@ -107,7 +103,7 @@ func GetOne(c echo.Context) error {
 	uOut, err := getOneOutByID(int64(id))
 	if err != nil {
 		c.Echo().Logger.Debug(err)
-		if err == sql.ErrNoRows {
+		if err == db.ErrNotFound {
 			return echo.NewHTTPError(http.StatusNotFound,
 				"User(id:"+c.Param("id")+") Not Found")
 		}
@@ -168,16 +164,12 @@ func Update(c echo.Context) error {
 	uOut, err := updateOneOut(int64(id), uIn.Name, uIn.Password, uIn.Age)
 	if err != nil {
 		c.Echo().Logger.Debug(err)
-		if err == sql.ErrNoRows {
+		if err == db.ErrNotFound {
 			return echo.NewHTTPError(http.StatusNotFound,
 				"User(id:"+c.Param("id")+") Not Found")
-		}
-		if e, ok := err.(*mysql.MySQLError); ok {
-			//Duplicate
-			if e.Number == 1062 {
-				return echo.NewHTTPError(http.StatusBadRequest,
-					"User(name:"+uIn.Name+") Duplicate")
-			}
+		} else if err == db.ErrDupRows {
+			return echo.NewHTTPError(http.StatusBadRequest,
+				"User(name:"+uIn.Name+") Duplicate")
 		}
 		return err
 	}
@@ -204,7 +196,7 @@ func Delete(c echo.Context) error {
 	err = deleteOne(int64(id))
 	if err != nil {
 		c.Echo().Logger.Debug(err)
-		if err == sql.ErrNoRows {
+		if err == db.ErrNotFound {
 			return echo.NewHTTPError(http.StatusNotFound,
 				"User(id:"+c.Param("id")+") Not Found")
 		}

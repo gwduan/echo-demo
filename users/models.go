@@ -8,6 +8,7 @@ import (
 	"echo-demo/db"
 
 	"github.com/alexedwards/argon2id"
+	"github.com/go-sql-driver/mysql"
 )
 
 type User struct {
@@ -82,6 +83,12 @@ func newOne(name string, password string, age int64, regDate time.Time) (u *User
 
 	result, err := st.Exec(name, hashPass, tmpAge, regDate)
 	if err != nil {
+		if e, ok := err.(*mysql.MySQLError); ok {
+			//Duplicate
+			if e.Number == 1062 {
+				return nil, db.ErrDupRows
+			}
+		}
 		return nil, err
 	}
 
@@ -119,6 +126,9 @@ func getOneByID(id int64) (u *User, err error) {
 	var tmpAge sql.NullInt64
 	if err := st.QueryRow(id).Scan(&u.ID, &u.Name, &u.Password, &tmpAge,
 		&u.RegDate); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, db.ErrNotFound
+		}
 		return nil, err
 	}
 
@@ -213,6 +223,12 @@ func updateOne(id int64, name string, password string, age int64) (u *User, err 
 	//result, err := st.Exec(name, hashPass, tmpAge, id)
 	_, err = st.Exec(name, hashPass, tmpAge, id)
 	if err != nil {
+		if e, ok := err.(*mysql.MySQLError); ok {
+			//Duplicate
+			if e.Number == 1062 {
+				return nil, db.ErrDupRows
+			}
+		}
 		return nil, err
 	}
 	//num == 0 means id not found or data unchanged.
@@ -243,7 +259,7 @@ func deleteOne(id int64) error {
 		return err
 	}
 	if num, _ := result.RowsAffected(); num == 0 {
-		return sql.ErrNoRows
+		return db.ErrNotFound
 	}
 
 	return nil
@@ -261,7 +277,7 @@ func auth(name string, password string) (uOut *UserOutput, err error) {
 	}
 
 	if !match {
-		return nil, sql.ErrNoRows
+		return nil, db.ErrNotFound
 	}
 
 	return toOut(u), nil
@@ -280,6 +296,9 @@ func getOneByName(name string) (u *User, err error) {
 	var tmpAge sql.NullInt64
 	if err := st.QueryRow(name).Scan(&u.ID, &u.Name, &u.Password, &tmpAge,
 		&u.RegDate); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, db.ErrNotFound
+		}
 		return nil, err
 	}
 

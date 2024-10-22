@@ -3,8 +3,14 @@ package db
 import (
 	"database/sql"
 	"echo-demo/config"
+	"errors"
 
 	_ "github.com/go-sql-driver/mysql"
+)
+
+var (
+	ErrDupRows  = errors.New("DB: Duplicate")
+	ErrNotFound = errors.New("DB: Not Found")
 )
 
 var dbPool *sql.DB
