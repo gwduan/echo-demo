@@ -7,6 +7,7 @@ import (
 	"echo-demo/users"
 	"fmt"
 	"net/http"
+	"os"
 	"os/signal"
 	"syscall"
 	"time"
@@ -35,8 +36,14 @@ func main() {
 	e.Validator = &CustomValidator{validator: validator.New()}
 	e.Debug = true
 
-	if err := config.Init(); err != nil {
-		e.Logger.Fatal("Config: ", err)
+	if len(os.Args) > 1 {
+		if err := config.Etcd(os.Args[1]); err != nil {
+			e.Logger.Fatal("Config from Etcd: ", err)
+		}
+	} else {
+		if err := config.Init(); err != nil {
+			e.Logger.Fatal("Config from File: ", err)
+		}
 	}
 
 	if err := db.ConnInit(); err != nil {
