@@ -1,5 +1,6 @@
 {
   "server_addr": ":8080",
+  "admin_addr": ":8081",
 
   "sign_key": "secret",
   "verify_key": "secret",
@@ -7,6 +8,6 @@
   "db_name": "mysql",
   "db_url":  "root:root@/echo_demo?charset=utf8&parseTime=True&loc=Local",
 
-  "record_limit": 10,
+  "record_limit": 5,
   "record_offset": 0
 }

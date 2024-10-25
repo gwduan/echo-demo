@@ -4,6 +4,7 @@ import (
 	"context"
 	"echo-demo/config"
 	"echo-demo/db"
+	"echo-demo/stats"
 	"echo-demo/users"
 	"fmt"
 	"net/http"
@@ -52,6 +53,16 @@ func main() {
 
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
+
+	s := stats.New()
+	go func() {
+		admin := echo.New()
+		admin.Debug = true
+		admin.GET("/stats", s.Handler)
+		admin.Logger.Fatal(admin.Start(config.AdminAddr()))
+	}()
+
+	e.Use(s.Process)
 
 	gv := e.Group("/v1")
 	gv.POST("/auth", users.Auth)

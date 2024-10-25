@@ -13,6 +13,7 @@ import (
 
 type DemoConfig struct {
 	ServerAddr   string `json:"server_addr"`
+	AdminAddr    string `json:"admin_addr"`
 	SignKey      string `json:"sign_key"`
 	VerifyKey    string `json:"verify_key"`
 	DbName       string `json:"db_name"`
@@ -24,18 +25,24 @@ type DemoConfig struct {
 // Default values
 var config = DemoConfig{
 	ServerAddr: ":8080",
+	AdminAddr:  ":8081",
 
 	SignKey:   "secret",
 	VerifyKey: "secret",
 
-	DbName:       "mysql",
-	DbUrl:        "root:root@/echo_demo?charset=utf8&parseTime=True&loc=Local",
+	DbName: "mysql",
+	DbUrl:  "root:root@/echo_demo?charset=utf8&parseTime=True&loc=Local",
+
 	RecordLimit:  5,
 	RecordOffset: 0,
 }
 
 func ServerAddr() string {
 	return config.ServerAddr
+}
+
+func AdminAddr() string {
+	return config.AdminAddr
 }
 
 func SignKey() []byte {
@@ -87,6 +94,7 @@ func Etcd(endpoints string) error {
 
 	params := map[string]any{
 		"server_addr":   &config.ServerAddr,
+		"admin_addr":    &config.AdminAddr,
 		"sign_key":      &config.SignKey,
 		"verify_key":    &config.VerifyKey,
 		"db_name":       &config.DbName,
