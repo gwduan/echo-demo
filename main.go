@@ -4,6 +4,7 @@ import (
 	"context"
 	"echo-demo/config"
 	"echo-demo/db"
+	"echo-demo/redis"
 	"echo-demo/stats"
 	"echo-demo/users"
 	"fmt"
@@ -49,6 +50,10 @@ func main() {
 
 	if err := db.ConnInit(); err != nil {
 		e.Logger.Fatal("Database: ", err)
+	}
+
+	if err := redis.ClientInit(); err != nil {
+		e.Logger.Fatal("Redis: ", err)
 	}
 
 	e.Use(middleware.Logger())
