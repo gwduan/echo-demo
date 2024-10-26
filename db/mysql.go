@@ -16,7 +16,7 @@ var (
 var dbPool *sql.DB
 
 func ConnInit() error {
-	db, err := sql.Open(config.DbName(), config.DbUrl())
+	db, err := sql.Open(config.DbName(), config.DbURL())
 	if err != nil {
 		return err
 	}

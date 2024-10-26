@@ -17,7 +17,7 @@ type DemoConfig struct {
 	SignKey      string `json:"sign_key"`
 	VerifyKey    string `json:"verify_key"`
 	DbName       string `json:"db_name"`
-	DbUrl        string `json:"db_url"`
+	DbURL        string `json:"db_url"`
 	RedisURL     string `json:"redis_url"`
 	RecordLimit  int    `json:"record_limit"`
 	RecordOffset int    `json:"record_offset"`
@@ -32,7 +32,7 @@ var config = DemoConfig{
 	VerifyKey: "secret",
 
 	DbName: "mysql",
-	DbUrl:  "root:root@/echo_demo?charset=utf8&parseTime=True&loc=Local",
+	DbURL:  "root:root@/echo_demo?charset=utf8&parseTime=True&loc=Local",
 
 	RedisURL: "redis://localhost:6379",
 
@@ -60,8 +60,8 @@ func DbName() string {
 	return config.DbName
 }
 
-func DbUrl() string {
-	return config.DbUrl
+func DbURL() string {
+	return config.DbURL
 }
 
 func RedisURL() string {
@@ -105,7 +105,7 @@ func Etcd(endpoints string) error {
 		"sign_key":      &config.SignKey,
 		"verify_key":    &config.VerifyKey,
 		"db_name":       &config.DbName,
-		"db_url":        &config.DbUrl,
+		"db_url":        &config.DbURL,
 		"redis_url":     &config.RedisURL,
 		"record_limit":  &config.RecordLimit,
 		"record_offset": &config.RecordOffset,
