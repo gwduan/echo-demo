@@ -19,7 +19,7 @@ type User struct {
 	RegDate  time.Time
 }
 
-type UserInput struct {
+type Input struct {
 	Name     string `json:"name" form:"name" xml:"name" validate:"required"`
 	Password string `json:"password" form:"password" xml:"password" validate:"required"`
 	Age      int64  `json:"age" form:"age" xml:"age"`
@@ -30,7 +30,7 @@ type AuthInput struct {
 	Password string `json:"password" form:"password" xml:"password" validate:"required"`
 }
 
-type UserOutput struct {
+type Output struct {
 	ID      int64     `json:"id"`
 	Name    string    `json:"name"`
 	Age     int64     `json:"age"`
@@ -38,11 +38,11 @@ type UserOutput struct {
 }
 
 type AuthOutput struct {
-	User  *UserOutput `json:"user"`
-	Token string      `json:"token"`
+	User  *Output `json:"user"`
+	Token string  `json:"token"`
 }
 
-func newOneOut(name string, password string, age int64, regDate time.Time) (uOut *UserOutput, err error) {
+func NewOne(name string, password string, age int64, regDate time.Time) (uOut *Output, err error) {
 	u, err := newOne(name, password, age, regDate)
 	if err != nil {
 		return nil, err
@@ -51,8 +51,8 @@ func newOneOut(name string, password string, age int64, regDate time.Time) (uOut
 	return toOut(u), nil
 }
 
-func toOut(u *User) *UserOutput {
-	return &UserOutput{
+func toOut(u *User) *Output {
+	return &Output{
 		ID:      u.ID,
 		Name:    u.Name,
 		Age:     u.Age,
@@ -104,7 +104,7 @@ func newOne(name string, password string, age int64, regDate time.Time) (u *User
 	return u, nil
 }
 
-func getOneOutByID(id int64) (uOut *UserOutput, err error) {
+func GetOneByID(id int64) (uOut *Output, err error) {
 	u, err := getOneByID(id)
 	if err != nil {
 		return nil, err
@@ -139,13 +139,13 @@ func getOneByID(id int64) (u *User, err error) {
 	return u, nil
 }
 
-func getAllOut(limit int64, offset int64) (uOuts []*UserOutput, err error) {
+func GetAll(limit int64, offset int64) (uOuts []*Output, err error) {
 	us, err := getAll(limit, offset)
 	if err != nil {
 		return nil, err
 	}
 
-	uOuts = make([]*UserOutput, 0, limit)
+	uOuts = make([]*Output, 0, limit)
 	for _, u := range us {
 		uOuts = append(uOuts, toOut(u))
 	}
@@ -193,7 +193,7 @@ func getAll(limit int64, offset int64) (us []*User, err error) {
 	return us, nil
 }
 
-func updateOneOut(id int64, name string, password string, age int64) (uOut *UserOutput, err error) {
+func UpdateOne(id int64, name string, password string, age int64) (uOut *Output, err error) {
 	u, err := updateOne(id, name, password, age)
 	if err != nil {
 		return nil, err
@@ -246,7 +246,7 @@ func updateOne(id int64, name string, password string, age int64) (u *User, err 
 	return u, nil
 }
 
-func deleteOne(id int64) error {
+func DeleteOne(id int64) error {
 	conn := db.Conn()
 	st, err := conn.Prepare("DELETE FROM users WHERE id = ?")
 	if err != nil {
@@ -265,7 +265,7 @@ func deleteOne(id int64) error {
 	return nil
 }
 
-func auth(name string, password string) (uOut *UserOutput, err error) {
+func Auth(name string, password string) (uOut *Output, err error) {
 	u, err := getOneByName(name)
 	if err != nil {
 		return nil, err

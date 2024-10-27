@@ -4,9 +4,9 @@ import (
 	"context"
 	"echo-demo/config"
 	"echo-demo/db"
+	"echo-demo/handlers"
 	"echo-demo/redis"
 	"echo-demo/stats"
-	"echo-demo/users"
 	"fmt"
 	"net/http"
 	"os"
@@ -70,20 +70,20 @@ func main() {
 	e.Use(s.Process)
 
 	gv := e.Group("/v1")
-	gv.POST("/auth", users.Auth)
+	gv.POST("/auth", handlers.Auth)
 
 	gu := gv.Group("/users")
 	gu.Use(echojwt.WithConfig(echojwt.Config{
 		NewClaimsFunc: func(c echo.Context) jwt.Claims {
-			return new(users.JwtCustomClaims)
+			return new(handlers.JwtCustomClaims)
 		},
 		SigningKey: config.VerifyKey(),
 	}))
-	gu.GET("", users.GetAll)
-	gu.GET("/:id", users.GetOne)
-	gu.POST("", users.Create)
-	gu.PUT("/:id", users.Update)
-	gu.DELETE("/:id", users.Delete)
+	gu.GET("", handlers.GetAllUsers)
+	gu.GET("/:id", handlers.GetOneUser)
+	gu.POST("", handlers.CreateUser)
+	gu.PUT("/:id", handlers.UpdateUser)
+	gu.DELETE("/:id", handlers.DeleteUser)
 
 	ctx, stop := signal.NotifyContext(context.Background(),
 		syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)

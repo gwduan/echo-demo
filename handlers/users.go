@@ -1,8 +1,9 @@
-package users
+package handlers
 
 import (
 	"echo-demo/config"
 	"echo-demo/db"
+	"echo-demo/users"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -19,7 +20,7 @@ type JwtCustomClaims struct {
 }
 
 func Auth(c echo.Context) error {
-	aIn := new(AuthInput)
+	aIn := new(users.AuthInput)
 	if err := c.Bind(aIn); err != nil {
 		c.Echo().Logger.Debug(err)
 		return BadRequestErr("Data Invalid")
@@ -29,7 +30,7 @@ func Auth(c echo.Context) error {
 		return BadRequestErr("Validation Faild")
 	}
 
-	uOut, err := auth(aIn.Name, aIn.Password)
+	uOut, err := users.Auth(aIn.Name, aIn.Password)
 	if err != nil {
 		c.Echo().Logger.Debug(err)
 		if err == db.ErrNotFound {
@@ -53,15 +54,15 @@ func Auth(c echo.Context) error {
 		return err
 	}
 
-	return c.JSON(http.StatusOK, AuthOutput{uOut, tokenStr})
+	return c.JSON(http.StatusOK, users.AuthOutput{uOut, tokenStr})
 }
 
-func Create(c echo.Context) error {
+func CreateUser(c echo.Context) error {
 	if authID := claims(c).ID; authID != 1 {
 		return UnauthorizedErr("Admin Required")
 	}
 
-	uIn := new(UserInput)
+	uIn := new(users.Input)
 	if err := c.Bind(uIn); err != nil {
 		c.Echo().Logger.Debug(err)
 		return BadRequestErr("Data Invalid")
@@ -71,7 +72,7 @@ func Create(c echo.Context) error {
 		return BadRequestErr("Validation Faild")
 	}
 
-	uOut, err := newOneOut(uIn.Name, uIn.Password, uIn.Age, time.Now())
+	uOut, err := users.NewOne(uIn.Name, uIn.Password, uIn.Age, time.Now())
 	if err != nil {
 		c.Echo().Logger.Debug(err)
 		if err == db.ErrDupRows {
@@ -83,14 +84,14 @@ func Create(c echo.Context) error {
 	return c.JSON(http.StatusCreated, uOut)
 }
 
-func GetOne(c echo.Context) error {
+func GetOneUser(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.Echo().Logger.Debug(err)
 		return BadRequestErr("Id(%s) Invalid", c.Param("id"))
 	}
 
-	uOut, err := getOneOutByID(int64(id))
+	uOut, err := users.GetOneByID(int64(id))
 	if err != nil {
 		c.Echo().Logger.Debug(err)
 		if err == db.ErrNotFound {
@@ -102,7 +103,7 @@ func GetOne(c echo.Context) error {
 	return c.JSON(http.StatusOK, uOut)
 }
 
-func GetAll(c echo.Context) error {
+func GetAllUsers(c echo.Context) error {
 	limit, err := strconv.Atoi(c.QueryParam("limit"))
 	if err != nil || limit <= 0 {
 		limit = config.RecordLimit()
@@ -112,7 +113,7 @@ func GetAll(c echo.Context) error {
 		offset = config.RecordOffset()
 	}
 
-	uOuts, err := getAllOut(int64(limit), int64(offset))
+	uOuts, err := users.GetAll(int64(limit), int64(offset))
 	if err != nil {
 		c.Echo().Logger.Debug(err)
 		return err
@@ -121,7 +122,7 @@ func GetAll(c echo.Context) error {
 	return c.JSON(http.StatusOK, uOuts)
 }
 
-func Update(c echo.Context) error {
+func UpdateUser(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.Echo().Logger.Debug(err)
@@ -132,7 +133,7 @@ func Update(c echo.Context) error {
 		return UnauthorizedErr("Admin or User(id:%d) Required", id)
 	}
 
-	uIn := new(UserInput)
+	uIn := new(users.Input)
 	if err := c.Bind(uIn); err != nil {
 		c.Echo().Logger.Debug(err)
 		return BadRequestErr("Data Invalid")
@@ -142,7 +143,7 @@ func Update(c echo.Context) error {
 		return BadRequestErr("Validation Faild")
 	}
 
-	uOut, err := updateOneOut(int64(id), uIn.Name, uIn.Password, uIn.Age)
+	uOut, err := users.UpdateOne(int64(id), uIn.Name, uIn.Password, uIn.Age)
 	if err != nil {
 		c.Echo().Logger.Debug(err)
 		if err == db.ErrNotFound {
@@ -156,7 +157,7 @@ func Update(c echo.Context) error {
 	return c.JSON(http.StatusOK, uOut)
 }
 
-func Delete(c echo.Context) error {
+func DeleteUser(c echo.Context) error {
 	if authID := claims(c).ID; authID != 1 {
 		return UnauthorizedErr("Admin Required")
 	}
@@ -167,7 +168,7 @@ func Delete(c echo.Context) error {
 		return BadRequestErr("Id(%s) Invalid", c.Param("id"))
 	}
 
-	err = deleteOne(int64(id))
+	err = users.DeleteOne(int64(id))
 	if err != nil {
 		c.Echo().Logger.Debug(err)
 		if err == db.ErrNotFound {
