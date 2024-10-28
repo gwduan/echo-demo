@@ -59,6 +59,8 @@ func main() {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
+	e.Use(middleware.Static("./static"))
+
 	s := stats.New()
 	go func() {
 		admin := echo.New()
@@ -71,6 +73,7 @@ func main() {
 
 	gv := e.Group("/v1")
 	gv.POST("/auth", handlers.Auth)
+	gv.POST("/upload", handlers.Upload)
 
 	gu := gv.Group("/users")
 	gu.Use(echojwt.WithConfig(echojwt.Config{

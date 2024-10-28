@@ -1,11 +1,15 @@
 package handlers
 
 import (
+	"crypto/md5"
 	"echo-demo/config"
 	"echo-demo/db"
 	"echo-demo/users"
 	"fmt"
+	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -178,6 +182,45 @@ func DeleteUser(c echo.Context) error {
 	}
 
 	return c.NoContent(http.StatusNoContent)
+}
+
+func Upload(c echo.Context) error {
+	name := c.FormValue("name")
+	email := c.FormValue("email")
+
+	form, err := c.MultipartForm()
+	if err != nil {
+		return err
+	}
+
+	files := form.File["files"]
+	for _, file := range files {
+		src, err := file.Open()
+		if err != nil {
+			return err
+		}
+		defer src.Close()
+
+		hash := md5.New()
+		if _, err := io.Copy(hash, src); err != nil {
+			return err
+		}
+		hex := fmt.Sprintf("%x", hash.Sum(nil))
+
+		dstName := "./static/" + hex + filepath.Ext(file.Filename)
+		dst, err := os.Create(dstName)
+		if err != nil {
+			return err
+		}
+		defer dst.Close()
+
+		src.Seek(0, 0)
+		if _, err := io.Copy(dst, src); err != nil {
+			return err
+		}
+	}
+
+	return c.HTML(http.StatusOK, fmt.Sprintf("<p>Uploaded successfully %d files with fields name=%s and email=%s.</p>", len(files), name, email))
 }
 
 func claims(c echo.Context) *JwtCustomClaims {
