@@ -16,6 +16,7 @@ type DemoConfig struct {
 	AdminAddr    string `json:"admin_addr"`
 	SignKey      string `json:"sign_key"`
 	VerifyKey    string `json:"verify_key"`
+	SessionKey   string `json:"session_key"`
 	DbName       string `json:"db_name"`
 	DbURL        string `json:"db_url"`
 	RedisURL     string `json:"redis_url"`
@@ -30,6 +31,8 @@ var config = DemoConfig{
 
 	SignKey:   "secret",
 	VerifyKey: "secret",
+
+	SessionKey: "secret",
 
 	DbName: "mysql",
 	DbURL:  "root:root@/echo_demo?charset=utf8&parseTime=True&loc=Local",
@@ -54,6 +57,10 @@ func SignKey() []byte {
 
 func VerifyKey() []byte {
 	return []byte(config.VerifyKey)
+}
+
+func SessionKey() []byte {
+	return []byte(config.SessionKey)
 }
 
 func DbName() string {
@@ -104,6 +111,7 @@ func Etcd(endpoints string) error {
 		"admin_addr":    &config.AdminAddr,
 		"sign_key":      &config.SignKey,
 		"verify_key":    &config.VerifyKey,
+		"session_key":   &config.SessionKey,
 		"db_name":       &config.DbName,
 		"db_url":        &config.DbURL,
 		"redis_url":     &config.RedisURL,

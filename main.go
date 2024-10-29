@@ -16,6 +16,8 @@ import (
 
 	"github.com/go-playground/validator"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/gorilla/sessions"
+	"github.com/labstack/echo-contrib/session"
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -87,6 +89,11 @@ func main() {
 	gu.POST("", handlers.CreateUser)
 	gu.PUT("/:id", handlers.UpdateUser)
 	gu.DELETE("/:id", handlers.DeleteUser)
+
+	gr := gv.Group("/roles")
+	gr.Use(session.Middleware(sessions.NewCookieStore(config.SessionKey())))
+	gr.POST("/login", handlers.Login)
+	gr.GET("/:id", handlers.GetOneRole)
 
 	ctx, stop := signal.NotifyContext(context.Background(),
 		syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)

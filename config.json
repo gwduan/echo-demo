@@ -5,6 +5,8 @@
   "sign_key": "secret",
   "verify_key": "secret",
 
+  "session_key": "secret",
+
   "db_name": "mysql",
   "db_url":  "root:root@/echo_demo?charset=utf8&parseTime=True&loc=Local",
 
