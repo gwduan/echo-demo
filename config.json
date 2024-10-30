@@ -10,6 +10,8 @@
   "db_name": "mysql",
   "db_url":  "root:root@/echo_demo?charset=utf8&parseTime=True&loc=Local",
 
+  "valkey_url": "redis://localhost:6379",
+
   "record_limit": 5,
   "record_offset": 0
 }

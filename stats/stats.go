@@ -2,7 +2,7 @@ package stats
 
 import (
 	"context"
-	"echo-demo/redis"
+	"echo-demo/vk"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -20,15 +20,15 @@ type Stats struct {
 	mutex    sync.RWMutex
 }
 
-type RedisStats struct {
-	Requests int            `json:"requests"`
-	Statuses map[string]int `json:"statuses"`
-	URLs     map[string]int `json:"urls"`
+type ValkeyStats struct {
+	Requests int64            `json:"requests"`
+	Statuses map[string]int64 `json:"statuses"`
+	URLs     map[string]int64 `json:"urls"`
 }
 
 type AllStats struct {
-	Local  *Stats      `json:"Local"`
-	Global *RedisStats `json:"Global"`
+	Local  *Stats       `json:"Local"`
+	Global *ValkeyStats `json:"Global"`
 }
 
 func New() *Stats {
@@ -53,15 +53,15 @@ func (s *Stats) Process(next echo.HandlerFunc) echo.HandlerFunc {
 
 		go func() {
 			ctx := context.Background()
-			client := redis.Client()
-			pipe := client.TxPipeline()
+			client := vk.Client()
 
-			pipe.Incr(ctx, "Requests")
-			pipe.HIncrBy(ctx, "Statuses", status, 1)
-			pipe.HIncrBy(ctx, "URLs", smu, 1)
-
-			if _, err := pipe.Exec(ctx); err != nil {
-				c.Echo().Logger.Debug(err)
+			for _, resp := range client.DoMulti(ctx,
+				client.B().Incr().Key("Requests").Build(),
+				client.B().Hincrby().Key("Statuses").Field(status).Increment(1).Build(),
+				client.B().Hincrby().Key("URLs").Field(smu).Increment(1).Build()) {
+				if err := resp.Error(); err != nil {
+					c.Echo().Logger.Debug(err)
+				}
 			}
 		}()
 
@@ -77,34 +77,28 @@ func (s *Stats) Process(next echo.HandlerFunc) echo.HandlerFunc {
 
 func (s *Stats) Handler(c echo.Context) error {
 	ctx := context.Background()
-	client := redis.Client()
+	client := vk.Client()
 
-	requests, err := client.Get(ctx, "Requests").Result()
+	requests, err := client.Do(ctx, client.B().Get().Key("Requests").Build()).AsInt64()
 	if err != nil {
 		c.Echo().Logger.Debug(err)
 		return err
 	}
-	statuses, err := client.HGetAll(ctx, "Statuses").Result()
+	statuses, err := client.Do(ctx, client.B().Hgetall().Key("Statuses").Build()).AsIntMap()
 	if err != nil {
 		c.Echo().Logger.Debug(err)
 		return err
 	}
-	urls, err := client.HGetAll(ctx, "URLs").Result()
+	urls, err := client.Do(ctx, client.B().Hgetall().Key("URLs").Build()).AsIntMap()
 	if err != nil {
 		c.Echo().Logger.Debug(err)
 		return err
 	}
 
-	rs := &RedisStats{
-		Statuses: map[string]int{},
-		URLs:     map[string]int{},
-	}
-	rs.Requests, _ = strconv.Atoi(requests)
-	for k, v := range statuses {
-		rs.Statuses[k], _ = strconv.Atoi(v)
-	}
-	for k, v := range urls {
-		rs.URLs[k], _ = strconv.Atoi(v)
+	rs := &ValkeyStats{
+		Requests: requests,
+		Statuses: statuses,
+		URLs:     urls,
 	}
 
 	s.mutex.RLock()

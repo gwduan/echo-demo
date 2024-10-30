@@ -19,7 +19,7 @@ type DemoConfig struct {
 	SessionKey   string `json:"session_key"`
 	DbName       string `json:"db_name"`
 	DbURL        string `json:"db_url"`
-	RedisURL     string `json:"redis_url"`
+	ValkeyURL    string `json:"valkey_url"`
 	RecordLimit  int    `json:"record_limit"`
 	RecordOffset int    `json:"record_offset"`
 }
@@ -37,7 +37,7 @@ var config = DemoConfig{
 	DbName: "mysql",
 	DbURL:  "root:root@/echo_demo?charset=utf8&parseTime=True&loc=Local",
 
-	RedisURL: "redis://localhost:6379",
+	ValkeyURL: "redis://localhost:6379",
 
 	RecordLimit:  5,
 	RecordOffset: 0,
@@ -71,8 +71,8 @@ func DbURL() string {
 	return config.DbURL
 }
 
-func RedisURL() string {
-	return config.RedisURL
+func ValkeyURL() string {
+	return config.ValkeyURL
 }
 
 func RecordLimit() int {
@@ -114,7 +114,7 @@ func Etcd(endpoints string) error {
 		"session_key":   &config.SessionKey,
 		"db_name":       &config.DbName,
 		"db_url":        &config.DbURL,
-		"redis_url":     &config.RedisURL,
+		"valkey_url":    &config.ValkeyURL,
 		"record_limit":  &config.RecordLimit,
 		"record_offset": &config.RecordOffset,
 	}

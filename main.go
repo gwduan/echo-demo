@@ -5,8 +5,8 @@ import (
 	"echo-demo/config"
 	"echo-demo/db"
 	"echo-demo/handlers"
-	"echo-demo/redis"
 	"echo-demo/stats"
+	"echo-demo/vk"
 	"fmt"
 	"net/http"
 	"os"
@@ -54,8 +54,8 @@ func main() {
 		e.Logger.Fatal("Database: ", err)
 	}
 
-	if err := redis.ClientInit(); err != nil {
-		e.Logger.Fatal("Redis: ", err)
+	if err := vk.ClientInit(); err != nil {
+		e.Logger.Fatal("Valkey: ", err)
 	}
 
 	e.Use(middleware.Logger())
