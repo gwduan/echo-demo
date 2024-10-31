@@ -17,12 +17,6 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-type JwtCustomClaims struct {
-	ID   int64  `json:"id"`
-	Name string `json:"name"`
-	jwt.RegisteredClaims
-}
-
 func Auth(c echo.Context) error {
 	aIn := new(users.AuthInput)
 	if err := c.Bind(aIn); err != nil {
@@ -221,24 +215,4 @@ func Upload(c echo.Context) error {
 	}
 
 	return c.HTML(http.StatusOK, fmt.Sprintf("<p>Uploaded successfully %d files with fields name=%s and email=%s.</p>", len(files), name, email))
-}
-
-func claims(c echo.Context) *JwtCustomClaims {
-	token := c.Get("user").(*jwt.Token)
-	return token.Claims.(*JwtCustomClaims)
-}
-
-func BadRequestErr(format string, a ...any) error {
-	msg := fmt.Sprintf(format, a...)
-	return echo.NewHTTPError(http.StatusBadRequest, msg)
-}
-
-func NotFoundErr(format string, a ...any) error {
-	msg := fmt.Sprintf(format, a...)
-	return echo.NewHTTPError(http.StatusNotFound, msg)
-}
-
-func UnauthorizedErr(format string, a ...any) error {
-	msg := fmt.Sprintf(format, a...)
-	return echo.NewHTTPError(http.StatusUnauthorized, msg)
 }
