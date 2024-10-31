@@ -46,10 +46,7 @@ func (s *Stats) Process(next echo.HandlerFunc) echo.HandlerFunc {
 		}
 
 		status := strconv.Itoa(c.Response().Status)
-		smu := fmt.Sprintf("%s %-6s:%s",
-			status,
-			c.Request().Method,
-			c.Request().URL.String())
+		smu := fmt.Sprintf("%s %-6s:%s", status, c.Request().Method, c.Request().URL.String())
 
 		go func() {
 			ctx := context.Background()

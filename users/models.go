@@ -124,8 +124,7 @@ func getOneByID(id int64) (u *User, err error) {
 	defer st.Close()
 
 	var tmpAge sql.NullInt64
-	if err := st.QueryRow(id).Scan(&u.ID, &u.Name, &u.Password, &tmpAge,
-		&u.RegDate); err != nil {
+	if err := st.QueryRow(id).Scan(&u.ID, &u.Name, &u.Password, &tmpAge, &u.RegDate); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, db.ErrNotFound
 		}
@@ -177,8 +176,7 @@ func getAll(limit int64, offset int64) (us []*User, err error) {
 	for rows.Next() {
 		u := new(User)
 		var tmpAge sql.NullInt64
-		if err := rows.Scan(&u.ID, &u.Name, &u.Password, &tmpAge,
-			&u.RegDate); err != nil {
+		if err := rows.Scan(&u.ID, &u.Name, &u.Password, &tmpAge, &u.RegDate); err != nil {
 			return nil, err
 		}
 		if tmpAge.Valid {
@@ -294,8 +292,7 @@ func getOneByName(name string) (u *User, err error) {
 	defer st.Close()
 
 	var tmpAge sql.NullInt64
-	if err := st.QueryRow(name).Scan(&u.ID, &u.Name, &u.Password, &tmpAge,
-		&u.RegDate); err != nil {
+	if err := st.QueryRow(name).Scan(&u.ID, &u.Name, &u.Password, &tmpAge, &u.RegDate); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, db.ErrNotFound
 		}
