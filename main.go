@@ -93,6 +93,7 @@ func main() {
 	gr := gv.Group("/roles")
 	gr.Use(session.Middleware(sessions.NewCookieStore(config.SessionKey())))
 	gr.POST("/login", handlers.Login)
+	gr.GET("", handlers.GetAllRoles)
 	gr.GET("/:id", handlers.GetOneRole)
 
 	ctx, stop := signal.NotifyContext(context.Background(),

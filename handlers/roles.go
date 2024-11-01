@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"echo-demo/config"
 	"echo-demo/db"
 	"echo-demo/users"
 	"net/http"
@@ -49,12 +50,8 @@ func Login(c echo.Context) error {
 }
 
 func GetOneRole(c echo.Context) error {
-	sess, err := session.Get("session", c)
-	if err != nil {
+	if _, err := loginID(c); err != nil {
 		return err
-	}
-	if _, ok := sess.Values["role_id"]; !ok {
-		return UnauthorizedErr("Please login")
 	}
 
 	id, err := strconv.Atoi(c.Param("id"))
@@ -73,4 +70,45 @@ func GetOneRole(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, uOut)
+}
+
+func GetAllRoles(c echo.Context) error {
+	if _, err := loginID(c); err != nil {
+		return err
+	}
+
+	limit, err := strconv.Atoi(c.QueryParam("limit"))
+	if err != nil || limit <= 0 {
+		limit = config.RecordLimit()
+	}
+	offset, err := strconv.Atoi(c.QueryParam("offset"))
+	if err != nil || offset < 0 {
+		offset = config.RecordOffset()
+	}
+
+	uOuts, err := users.GetAll(int64(limit), int64(offset))
+	if err != nil {
+		c.Echo().Logger.Debug(err)
+		return err
+	}
+
+	return c.JSON(http.StatusOK, uOuts)
+}
+func loginID(c echo.Context) (int64, error) {
+	sess, err := session.Get("session", c)
+	if err != nil {
+		return 0, err
+	}
+
+	v, ok := sess.Values["role_id"]
+	if !ok {
+		return 0, UnauthorizedErr("Please login")
+	}
+
+	id, ok := v.(int64)
+	if !ok {
+		return 0, BadRequestErr("Session Invalid")
+	}
+
+	return id, nil
 }
