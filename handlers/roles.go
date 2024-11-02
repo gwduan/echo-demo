@@ -6,6 +6,7 @@ import (
 	"echo-demo/users"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
@@ -47,6 +48,37 @@ func Login(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, uOut)
+}
+
+func CreateRole(c echo.Context) error {
+	logID, err := loginID(c)
+	if err != nil {
+		return err
+	}
+	if logID != 1 {
+		return UnauthorizedErr("Admin Required")
+	}
+
+	uIn := new(users.Input)
+	if err := c.Bind(uIn); err != nil {
+		c.Echo().Logger.Debug(err)
+		return BadRequestErr("Data Invalid")
+	}
+	if err := c.Validate(uIn); err != nil {
+		c.Echo().Logger.Debug(err)
+		return BadRequestErr("Validation Faild")
+	}
+
+	uOut, err := users.NewOne(uIn.Name, uIn.Password, uIn.Age, time.Now())
+	if err != nil {
+		c.Echo().Logger.Debug(err)
+		if err == db.ErrDupRows {
+			return BadRequestErr("User(%s) Duplicate", uIn.Name)
+		}
+		return err
+	}
+
+	return c.JSON(http.StatusCreated, uOut)
 }
 
 func GetOneRole(c echo.Context) error {
@@ -94,6 +126,7 @@ func GetAllRoles(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, uOuts)
 }
+
 func loginID(c echo.Context) (int64, error) {
 	sess, err := session.Get("session", c)
 	if err != nil {
