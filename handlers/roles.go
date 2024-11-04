@@ -127,6 +127,46 @@ func GetAllRoles(c echo.Context) error {
 	return c.JSON(http.StatusOK, uOuts)
 }
 
+func UpdateRole(c echo.Context) error {
+	logID, err := loginID(c)
+	if err != nil {
+		return err
+	}
+
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.Echo().Logger.Debug(err)
+		return BadRequestErr("Id(%s) Invalid", c.Param("id"))
+	}
+
+	if logID != 1 && logID != int64(id) {
+		return UnauthorizedErr("Admin or User(id:%d) Required", id)
+	}
+
+	uIn := new(users.Input)
+	if err := c.Bind(uIn); err != nil {
+		c.Echo().Logger.Debug(err)
+		return BadRequestErr("Data Invalid")
+	}
+	if err := c.Validate(uIn); err != nil {
+		c.Echo().Logger.Debug(err)
+		return BadRequestErr("Validation Faild")
+	}
+
+	uOut, err := users.UpdateOne(int64(id), uIn.Name, uIn.Password, uIn.Age)
+	if err != nil {
+		c.Echo().Logger.Debug(err)
+		if err == db.ErrNotFound {
+			return NotFoundErr("User(id:%d) Not Found", id)
+		} else if err == db.ErrDupRows {
+			return BadRequestErr("User(%s) Duplicate", uIn.Name)
+		}
+		return err
+	}
+
+	return c.JSON(http.StatusOK, uOut)
+}
+
 func loginID(c echo.Context) (int64, error) {
 	sess, err := session.Get("session", c)
 	if err != nil {

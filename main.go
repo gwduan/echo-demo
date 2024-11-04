@@ -96,6 +96,7 @@ func main() {
 	gr.GET("", handlers.GetAllRoles)
 	gr.GET("/:id", handlers.GetOneRole)
 	gr.POST("", handlers.CreateRole)
+	gr.PUT("/:id", handlers.UpdateRole)
 
 	ctx, stop := signal.NotifyContext(context.Background(),
 		syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
