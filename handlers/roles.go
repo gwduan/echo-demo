@@ -167,6 +167,33 @@ func UpdateRole(c echo.Context) error {
 	return c.JSON(http.StatusOK, uOut)
 }
 
+func DeleteRole(c echo.Context) error {
+	logID, err := loginID(c)
+	if err != nil {
+		return err
+	}
+	if logID != 1 {
+		return UnauthorizedErr("Admin Required")
+	}
+
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.Echo().Logger.Debug(err)
+		return BadRequestErr("Id(%s) Invalid", c.Param("id"))
+	}
+
+	err = users.DeleteOne(int64(id))
+	if err != nil {
+		c.Echo().Logger.Debug(err)
+		if err == db.ErrNotFound {
+			return NotFoundErr("User(id:%d) Not Found", id)
+		}
+		return err
+	}
+
+	return c.NoContent(http.StatusNoContent)
+}
+
 func loginID(c echo.Context) (int64, error) {
 	sess, err := session.Get("session", c)
 	if err != nil {
